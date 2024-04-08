@@ -30,6 +30,13 @@ class CandleFactory(ABC):
         pass
 
     @abstractmethod
+    async def fetch_newest(self) -> list[Candle]:
+        """
+        Fetch the newest candle data.
+        """
+        pass
+
+    @abstractmethod
     async def fetch_history(self, start: int, limit: int) -> list[Candle]:
         """
         Fetch historical candle data.

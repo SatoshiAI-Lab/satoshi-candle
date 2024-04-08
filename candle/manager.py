@@ -35,6 +35,12 @@ class CandleSenderReceiver:
         """
         return await self._factory.check()
 
+    async def pull_newest(self):
+        """
+        Poll the newest data from the factory once
+        """
+        return await self._factory.fetch_newest()
+
     async def pull_history(self, ws: WebSocket, start: int, limit: int) -> None:
         """
         Get historical data based on user request
@@ -116,6 +122,12 @@ class CandleManager:
         if ':' not in tag:
             raise ValueError('Invalid Tag')
         return tag
+
+    @classmethod
+    async def broadcast(cls) -> None:
+        for tag in cls.listeners:
+            data = await cls.listeners[tag].pull_newest()
+            await cls.listeners[tag].boardcast(data)
 
     @classmethod
     async def message_handle(cls, ws: WebSocket, message: dict[str, str]) -> None:

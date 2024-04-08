@@ -95,12 +95,23 @@ class WebSocketManager:
                         logger.error(f"Error while closing WebSocket: {e}")
             await asyncio.sleep(30)
 
+    async def broadcast(self):
+        while True:
+            ts = time.time()
+            for ws, ws_block in self._clients.copy().items():
+                if ws_block['manager'] and hasattr(ws_block['manager'], 'broadcast'):
+                    await ws_block['manager'].broadcast(ws)
+            now = time.time()
+            if now - ts < 60:
+                await asyncio.sleep(60 - now % 60)
+
 
 manager = WebSocketManager()
 
 @on_startup
 async def start_heartbeat():
     asyncio.create_task(manager.heartbeat(), name='HeartbeatLoop')
+    asyncio.create_task(manager.broadcast(), name='BroadcastLoop')
 
 
 @app.websocket('/ws')
