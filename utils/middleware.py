@@ -1,3 +1,4 @@
+from fastapi.datastructures import Address
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
@@ -11,7 +12,7 @@ class RealIPMiddleware(BaseHTTPMiddleware):
 
         real_ip = cf_connecting_ip or xreal_ip
         if not real_ip or not xreal_port:
+            request.state.client = Address(request.client.host, request.client.port)
             return await call_next(request)
-        request.scope['client'] = (real_ip, xreal_port)
-
+        request.state.client = Address(real_ip, xreal_port)
         return await call_next(request)

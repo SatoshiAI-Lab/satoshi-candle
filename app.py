@@ -133,8 +133,8 @@ async def websocket_endpoint(ws: WebSocket):
         await ws.send_json({
             'type': 'notice',
             'message': 'Connected',
-            'ip': ws.client.host,
-            'port': ws.client.port,
+            'ip': ws.state.client.host,
+            'port': ws.state.client.port,
         })
         while True:
             message = await ws.receive_json()
@@ -147,6 +147,6 @@ async def websocket_endpoint(ws: WebSocket):
                 await manager.message_handle(ws, message)
     except WebSocketDisconnect as e:
         if e.code > 1001 and e.reason:
-            logger.warning(f"[{ws.client}] Connection closed unexpectedly: {e.code} {e.reason}")
+            logger.warning(f"[{ws.state.client}] Connection closed unexpectedly: {e.code} {e.reason}")
     finally:
         await manager.disconnect(ws)
