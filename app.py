@@ -6,18 +6,12 @@ from starlette.websockets import WebSocketState
 from utils.middleware import RealIPMiddleware
 from contextlib import asynccontextmanager
 from candle import CandleManager
-import logging
+from utils.logger import logger, APP_TITLE
 import time
 import sys
 
 
-APP_TITLE = 'OHLCV-WS-Pusher-Server'
 
-logger = logging.getLogger(APP_TITLE)
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(logging.Formatter('[%(asctime)s][%(levelname)s][%(pathname)s:%(lineno)s]%(message)s'))
-logger.addHandler(console_handler)
-logger.setLevel(logging.INFO)
 
 def startup_done(task: asyncio.Task[None]):
     try: task.result()

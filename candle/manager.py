@@ -1,5 +1,6 @@
 from . import datastruct
 from fastapi import WebSocket, WebSocketDisconnect
+from utils.logger import logger
 
 
 class CandleSenderReceiver:
@@ -92,6 +93,7 @@ class CandleManager:
                     raise ValueError('Invalid DEX Candle Factory')
                 await csr.add_listener(ws)
                 cls.listeners[tag] = csr
+                logger.info(f'New Listener for {tag}')
             case 'cex':
                 if tag in cls.listeners:
                     return await cls.listeners[tag].add_listener(ws)
@@ -110,6 +112,7 @@ class CandleManager:
                     raise ValueError('Invalid CEX Candle Factory')
                 await csr.add_listener(ws)
                 cls.listeners[tag] = csr
+                logger.info(f'New Listener for {tag}')
             case _:
                 await ws.send_json({'type': 'error', 'message': f'Invalid Tag {tag}'})
 
@@ -119,6 +122,7 @@ class CandleManager:
             return
         if not cls.listeners[tag].remove_listener(ws):
             del cls.listeners[tag]
+            logger.info(f'Listener for {tag} removed')
         await ws.send_json({'type': 'notice', 'status': 'success', 'message': 'unlisten success', 'tag': tag})
 
     @staticmethod
@@ -172,3 +176,4 @@ class CandleManager:
         for tag in list(cls.listeners):
             if not cls.listeners[tag].remove_listener(ws):
                 del cls.listeners[tag]
+                logger.info(f'Listener for {tag} removed')
