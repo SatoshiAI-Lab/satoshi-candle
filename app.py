@@ -20,6 +20,7 @@ def startup_done(task: asyncio.Task[None]):
 
 
 startup_list: list[Callable[[], Coroutine[Any, Any, None | NoReturn]]] = []
+exit_list: list[Callable[[], Coroutine[Any, Any, None | NoReturn]]] = []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,7 +31,7 @@ async def lifespan(app: FastAPI):
     # Running
     yield
     # Shutdown
-    pass
+    await asyncio.gather(*[exit_coro_func() for exit_coro_func in exit_list], return_exceptions=True)
 
 
 app = FastAPI(title=APP_TITLE, lifespan=lifespan)
@@ -48,6 +49,13 @@ def on_startup(func: Callable[[], Coroutine[Any, Any, None] | Coroutine[Any, Any
     Decorator to add a function to be run on startup.
     """
     startup_list.append(func)
+    return func
+
+def on_shutdown(func: Callable[[], Coroutine[Any, Any, None] | Coroutine[Any, Any, NoReturn]]):
+    """
+    Decorator to add a function to be run on shutdown.
+    """
+    exit_list.append(func)
     return func
 
 
@@ -68,6 +76,10 @@ class WebSocketManager:
         ws_block: dict[str, Any] = self._clients.pop(ws)
         if ws_block['manager'] and hasattr(ws_block['manager'], 'disconnect'):
             await ws_block['manager'].disconnect(ws)
+
+    async def disconnect_all(self):
+        for ws in self._clients.copy():
+            await self.disconnect(ws)
 
     async def message_handle(self, ws: WebSocket, message: dict[str, Any]):
         ws_block: dict[str, Any] = self._clients[ws]
@@ -92,7 +104,10 @@ class WebSocketManager:
     async def broadcast(self):
         while True:
             ts = time.time()
-            await CandleManager.broadcast()
+            try:
+                await CandleManager.broadcast()
+            except Exception as e:
+                logger.exception(f"Error while broadcasting: {e}")
             now = time.time()
             if now - ts < 60:
                 await asyncio.sleep(60 - now % 60)
@@ -104,6 +119,11 @@ manager = WebSocketManager()
 async def start_heartbeat():
     asyncio.create_task(manager.heartbeat(), name='HeartbeatLoop')
     asyncio.create_task(manager.broadcast(), name='BroadcastLoop')
+
+
+@on_shutdown
+async def stop_all_connections():
+    await manager.disconnect_all()
 
 
 @app.websocket('/ws')
