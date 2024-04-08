@@ -113,6 +113,9 @@ class CandleManager:
                 tag = f'dex:{data["chain"]}:{data["address"]}:{data.get("pool", "all")}:{data.get("interval", "smallest")}'
             else:
                 raise ValueError('Invalid Tag')
+        if ':' not in tag:
+            raise ValueError('Invalid Tag')
+        return tag
 
     @classmethod
     async def message_handle(cls, ws: WebSocket, message: dict[str, str]) -> None:
