@@ -6,6 +6,7 @@ class CexExchange:
     __DISABLE__ = False
     
     ID = 'exchange'
+    ORDER = 0
     order = 0
     NAME = 'CexExchange'
     NETLOC = 'example.com'
