@@ -128,19 +128,25 @@ async def stop_all_connections():
 
 @app.websocket('/ws')
 async def websocket_endpoint(ws: WebSocket):
-    ip = ws.headers.get('x-real-ip', ws.headers.get('cf-connecting-ip', ws.client.host))
-    port = ws.headers.get('x-real-port', ws.client.port)
     await manager.connect(ws)
     try:    
-        await ws.send_json({'type': 'notice', 'message': 'Connected'})
+        await ws.send_json({
+            'type': 'notice',
+            'message': 'Connected',
+            'ip': ws.client.host,
+            'port': ws.client.port,
+        })
         while True:
             message = await ws.receive_json()
             if 'type' not in message:
-                await ws.send_json({'type': 'error', 'message': 'No message type'})
+                await ws.send_json({
+                    'type': 'error',
+                    'message': 'No message type'
+                })
             else:
                 await manager.message_handle(ws, message)
     except WebSocketDisconnect as e:
         if e.code > 1001 and e.reason:
-            logger.warning(f"[{ip}:{port}] Connection closed unexpectedly: {e.code} {e.reason}")
+            logger.warning(f"[{ws.client}] Connection closed unexpectedly: {e.code} {e.reason}")
     finally:
         await manager.disconnect(ws)

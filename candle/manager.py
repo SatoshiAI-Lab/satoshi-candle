@@ -73,7 +73,7 @@ class CandleSenderReceiver:
                 })
             except WebSocketDisconnect: pass
             except Exception as e:
-                print(e)
+                logger.error(f'Error while sending data to {ws.client}: {e}')
 
 
 class CandleManager:
