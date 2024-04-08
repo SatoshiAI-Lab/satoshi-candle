@@ -3,7 +3,7 @@ from typing import Any, Callable, Coroutine, NoReturn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.websockets import WebSocketState
-from utils.middleware import RealIPMiddleware
+from utils.middleware import RealIPMiddleware, inject as inject_client
 from contextlib import asynccontextmanager
 from candle import CandleManager
 from utils.logger import logger, APP_TITLE
@@ -129,6 +129,7 @@ async def stop_all_connections():
 @app.websocket('/ws')
 async def websocket_endpoint(ws: WebSocket):
     await manager.connect(ws)
+    inject_client(ws)
     try:    
         await ws.send_json({
             'type': 'notice',
