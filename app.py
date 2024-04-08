@@ -98,9 +98,7 @@ class WebSocketManager:
     async def broadcast(self):
         while True:
             ts = time.time()
-            for ws, ws_block in self._clients.copy().items():
-                if ws_block['manager'] and hasattr(ws_block['manager'], 'broadcast'):
-                    await ws_block['manager'].broadcast(ws)
+            await CandleManager.broadcast()
             now = time.time()
             if now - ts < 60:
                 await asyncio.sleep(60 - now % 60)
