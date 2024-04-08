@@ -116,6 +116,7 @@ class CandleManager:
             return
         if not cls.listeners[tag].remove_listener(ws):
             del cls.listeners[tag]
+        await ws.send_json({'type': 'notice', 'status': 'success', 'message': 'unlisten success', 'tag': tag})
 
     @staticmethod
     def get_tag(data: dict[str, str]):
