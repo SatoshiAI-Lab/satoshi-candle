@@ -76,6 +76,12 @@ class CexExchange:
         return ts
 
     @staticmethod
+    def time_fix_frontend(_ts: int | str):
+        ts = int(_ts)
+        if ts > 0xFFFFFFFF: ts //= 1000
+        return ts
+
+    @staticmethod
     def kline_key_name_mapper(key: str):
         if key in ('_ts', 'timestamp'): return 'timestamp'
         return key
@@ -83,7 +89,7 @@ class CexExchange:
     @classmethod
     def kline_map(cls, data: list | dict):
         return {
-            cls.kline_key_name_mapper(name): cls.time_fix(data[path]) if name.startswith('_') else (float(data[path]) if path else 0.0)
+            cls.kline_key_name_mapper(name): cls.time_fix_frontend(data[path]) if name.startswith('_') else (float(data[path]) if path else 0.0)
             for name, path in cls.KLINE_MAPPER.items()
         }
 
