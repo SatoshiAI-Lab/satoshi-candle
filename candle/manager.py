@@ -63,13 +63,16 @@ class CandleSenderReceiver:
         """
         Broadcast the newly collected data to all listeners
         """
+        datas = [candle.model_dump() for candle in data]
         for ws in self._listeners:
             try:
                 await ws.send_json({
                     'type': 'update',
-                    'data': [candle.model_dump() for candle in data]
+                    'data': datas
                 })
             except WebSocketDisconnect: pass
+            except Exception as e:
+                print(e)
 
 
 class CandleManager:
