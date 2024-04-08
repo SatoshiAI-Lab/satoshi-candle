@@ -12,7 +12,8 @@ cexes = {
 
 class HTTPCEX(ds.CexCandleFactory):
     @classmethod
-    async def check_first_cex(cls, base: str, quote: str, interval: str | None = None) -> str | None:
+    async def check_first_cex(cls, _: str, symbol: str, interval: str | None = None) -> str | None:
+        base, quote = symbol.split('-')
         for cex_type in sorted(cexes.values(), key=lambda x: x.ORDER):
             if interval not in cex_type.KLINE_INTERVAL_MAPPER: continue
             cex = cex_type()
