@@ -94,6 +94,14 @@ class CandleManager:
                     return await cls.listeners[tag].add_listener(ws)
                 if datastruct.cex_cls is None:
                     raise ValueError('CEX Candle Factory not set.')
+                if '*' in args:
+                    if getattr(datastruct.cex_cls, 'check_first_cex', None) is None:
+                        raise ValueError('CEX Candle Factory not support wildcard')
+                    cex: str | None = await datastruct.cex_cls.check_first_cex(*args.split(':'))
+                    if cex is None:
+                        raise ValueError('No CEX can fetch the data')
+                    args = args.replace('*', cex, 1)
+                    tag = f'cex:{args}'
                 csr = CandleSenderReceiver(tag, datastruct.cex_cls(*args.split(':')))
                 if not await csr.check():
                     raise ValueError('Invalid CEX Candle Factory')
