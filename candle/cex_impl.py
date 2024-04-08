@@ -17,7 +17,8 @@ class HTTPCEX(ds.CexCandleFactory):
             if interval not in cex_type.KLINE_INTERVAL_MAPPER: continue
             cex = cex_type()
             try:
-                await cex.fetch(base, quote, limit=1, interval=interval)
+                klines = await cex.fetch(base, quote, limit=1, interval=interval)
+                if not klines: continue
                 return cex
             except LookupError: continue
         else:
