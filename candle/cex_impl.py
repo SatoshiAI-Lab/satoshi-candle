@@ -30,7 +30,8 @@ class HTTPCEX(ds.CexCandleFactory):
             self.cex = asyncio.run(self.check_first_cex(self.base, self.quote, interval))
         elif exchange not in cexes:
             raise ValueError('Invalid CEX Exchange')
-        self.cex = cexes[exchange]()
+        else:
+            self.cex = cexes[exchange]()
         super().__init__(self.cex.ID, symbol, interval)
 
     async def check(self) -> bool:
