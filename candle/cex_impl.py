@@ -12,7 +12,7 @@ cexes = {
 
 class HTTPCEX(ds.CexCandleFactory):
     @classmethod
-    async def check_first_cex(cls, base: str, quote: str, interval: str | None = None) -> None:
+    async def check_first_cex(cls, base: str, quote: str, interval: str | None = None) -> cex.CexExchange | None:
         for cex_type in sorted(cexes.values(), key=lambda x: x.ORDER):
             if interval not in cex_type.KLINE_INTERVAL_MAPPER: continue
             cex = cex_type()
@@ -27,7 +27,9 @@ class HTTPCEX(ds.CexCandleFactory):
     def __init__(self, exchange: str, symbol: str, interval: str | None = None) -> None:
         self.base, self.quote = symbol.split('-')
         if exchange == '*':
-            self.cex = asyncio.run(self.check_first_cex(self.base, self.quote, interval))
+            loop = asyncio.get_event_loop()
+            future = asyncio.run_coroutine_threadsafe(self.check_first_cex(self.base, self.quote, interval), loop)
+            self.cex = future.result()
         elif exchange not in cexes:
             raise ValueError('Invalid CEX Exchange')
         else:
