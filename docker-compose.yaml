@@ -1,0 +1,11 @@
+version: '3'
+services:
+  ohlcv-server:
+    network_mode: bridge
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deploy
+    ports:
+      - "10141:8000"
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --log-level warning
