@@ -42,7 +42,7 @@ class HTTPCEX(ds.CexCandleFactory):
         return [ds.Candle(**kline) for kline in klines]
 
     async def fetch_history(self, start: int | None = None, limit: int | None = None) -> list[ds.Candle]:
-        klines = await self.cex.fetch(self.base, self.quote, start, limit, self.interval)
+        klines = await self.cex.fetch(self.base, self.quote, start * (1000 if self.cex.TS_UNIT else 1), limit, self.interval)
         return [ds.Candle(**kline) for kline in klines]
 
     async def fetch_latest(self) -> list[ds.Candle]:
