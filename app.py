@@ -69,8 +69,8 @@ class WebSocketManager:
         }
 
     async def disconnect(self, ws: WebSocket, code: int = 1000, reason: str = 'Connection Closed'):
-        if ws.client_state == WebSocketState.CONNECTED:
-            await ws.close()
+        try: await ws.close(code, reason)
+        except: pass
         ws_block: dict[str, Any] = self._clients.pop(ws)
         if ws_block['manager'] and hasattr(ws_block['manager'], 'disconnect'):
             await ws_block['manager'].disconnect(ws)
