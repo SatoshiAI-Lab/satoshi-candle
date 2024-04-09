@@ -131,7 +131,11 @@ class CexExchange:
                 response.raise_for_status()
                 klines = response.json()
                 for next in self.klinepath: klines = klines[next]
-                return [self.kline_map(kline) for kline in klines]
+                results = [self.kline_map(kline) for kline in klines]
+                if len(results) > 1:
+                    if results[0]['timestamp'] > results[1]['timestamp']:
+                        results = results[::-1]
+                return results
         except Exception as e:
             raise LookupError(f"Failed to fetch latest data from {self.NAME}: {e}") from e
 
@@ -204,7 +208,7 @@ class Okx(CexExchange):
         'turnover': None
     }
     KLINE_QUERY_SYMBOL_PARAM = 'instId'
-    KLINE_QUERY_START_PARAM = 'before'
+    KLINE_QUERY_END_PARAM = 'after'
     KLINE_QUERY_LIMIT_PARAM  = 'limit'
     KLINE_QUERY_INTERVAL_PARAM = 'bar'
     KLINE_INTERVAL_MAPPER = {
