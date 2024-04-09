@@ -132,10 +132,13 @@ class CexExchange:
                 klines = response.json()
                 for next in self.klinepath: klines = klines[next]
                 results = [self.kline_map(kline) for kline in klines]
+                if len(results) == 0:
+                    raise LookupError(f"No data found for {self.symbol_name(base, quote)}:{interval} start at {start} limit {limit}")
                 if len(results) > 1:
                     if results[0]['timestamp'] > results[1]['timestamp']:
                         results = results[::-1]
                 return results
+        except LookupError: raise
         except Exception as e:
             raise LookupError(f"Failed to fetch latest data from {self.NAME}: {e}") from e
 
