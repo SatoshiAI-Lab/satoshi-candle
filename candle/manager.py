@@ -46,11 +46,14 @@ class CandleSenderReceiver:
         """
         Get historical data based on user request
         """
-        history = await self._factory.fetch_history(start, limit)
-        await ws.send_json({
-            'type': 'history',
-            'data': [candle.model_dump() for candle in history]
-        })
+        try:
+            history = await self._factory.fetch_history(start, limit)
+            await ws.send_json({
+                'type': 'history',
+                'data': [candle.model_dump() for candle in history]
+            })
+        except Exception as e:
+            await ws.send_json({'type': 'error', 'message': f'Error while fetching history: {e}'})
 
     def remove_listener(self, ws: WebSocket) -> bool:
         """
