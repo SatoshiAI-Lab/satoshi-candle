@@ -110,6 +110,8 @@ class CandleManager:
                         raise ValueError('No CEX can fetch the data')
                     args = args.replace('*', cex, 1)
                     tag = f'cex:{args}'
+                if tag in cls.listeners:
+                    return await cls.listeners[tag].add_listener(ws)
                 csr = CandleSenderReceiver(tag, datastruct.cex_cls(*args.split(':')))
                 if not await csr.check():
                     raise ValueError('Invalid CEX Candle Factory')
@@ -122,7 +124,7 @@ class CandleManager:
     @classmethod
     async def _unlisten(cls, ws: WebSocket, tag: str) -> None:
         if tag not in cls.listeners:
-            return
+            return await ws.send_json({'type': 'notice', 'status': 'error', 'message': f'No listener for {tag}'})
         if not cls.listeners[tag].remove_listener(ws):
             del cls.listeners[tag]
             logger.info(f'Listener for {tag} removed')
