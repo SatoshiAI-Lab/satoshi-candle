@@ -17,6 +17,7 @@ class CexExchange:
     QUOTE = 'quote'
     QUOTE_DEFAULT = 'USDT'
     KLINE_URI = ''
+    KLINE_HISTORY_URI = ''
     KLINE_PATH = ''
     KLINE_MAPPER: dict[str, int | str | None] = {
         '_ts': '',
@@ -31,6 +32,7 @@ class CexExchange:
     KLINE_QUERY: dict[str, str] = {}
     KLINE_QUERY_SYMBOL_PARAM = 'symbol'
     KLINE_QUERY_START_PARAM = ''
+    KLINE_QUERY_END_PARAM = ''
     KLINE_QUERY_LIMIT_PARAM = ''
     KLINE_QUERY_INTERVAL_PARAM = ''
     KLINE_INTERVAL_MAPPER = {
@@ -43,6 +45,17 @@ class CexExchange:
         '1d': '1d',
         'smallest': '1m',
         None: '1m'
+    }
+    KLINE_INTERVAL_TIME_MAPPER = {
+        '1m': 60,
+        '5m': 300,
+        '15m': 900,
+        '30m': 1800,
+        '1h': 3600,
+        '4h': 14400,
+        '1d': 86400,
+        'smallest': 60,
+        None: 60
     }
     TS_UNIT = 0 # 0 (seconds), 1 (milliseconds)
     
@@ -61,6 +74,10 @@ class CexExchange:
     @property
     def klineurl(self):
         return f"https://{self.NETLOC}{self.PREFIX}{self.KLINE_URI}"
+
+    @property
+    def klinehistoryurl(self):
+        return f"https://{self.NETLOC}{self.PREFIX}{self.KLINE_HISTORY_URI}"
     
     @property
     def klinepath(self):
@@ -99,13 +116,19 @@ class CexExchange:
         query_params[self.KLINE_QUERY_SYMBOL_PARAM] = self.symbol_name(base, quote)
         if limit and self.KLINE_QUERY_LIMIT_PARAM:
             query_params[self.KLINE_QUERY_LIMIT_PARAM] = str(limit)
-        if start and self.KLINE_QUERY_START_PARAM:
-            query_params[self.KLINE_QUERY_START_PARAM] = str(start)
+        if start:
+            ts_unit = 1000 if self.TS_UNIT else 1
+            start *= ts_unit
+            if self.KLINE_QUERY_START_PARAM:
+                query_params[self.KLINE_QUERY_START_PARAM] = str(start)
+            elif self.KLINE_QUERY_END_PARAM:
+                query_params[self.KLINE_QUERY_END_PARAM] = str(start + limit * self.KLINE_INTERVAL_TIME_MAPPER[interval] * ts_unit)
+        
         if interval and self.KLINE_QUERY_INTERVAL_PARAM and self.KLINE_INTERVAL_MAPPER.get(interval):
             query_params[self.KLINE_QUERY_INTERVAL_PARAM] = self.KLINE_INTERVAL_MAPPER[interval]
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(self.klineurl, params=query_params)
+                response = await client.get(self.klinehistoryurl if start else self.klineurl, params=query_params)
                 response.raise_for_status()
                 klines = response.json()
                 for next in self.klinepath: klines = klines[next]
@@ -126,6 +149,7 @@ class Binance(CexExchange):
     QUOTE = 'quoteAsset'
     
     KLINE_URI = '/klines'
+    KLINE_HISTORY_URI = KLINE_URI
     KLINE_MAPPER = {
         '_ts': 0,
         'open': 1,
@@ -139,6 +163,7 @@ class Binance(CexExchange):
     KLINE_QUERY = dict(interval='1m')
     KLINE_QUERY_LIMIT_PARAM = 'limit'
     KLINE_QUERY_INTERVAL_PARAM = 'interval'
+    KLINE_QUERY_START_PARAM = 'startTime'
     TS_UNIT = 1
     COMSUMER = 200
     RATE_SPEED = 0.5
@@ -168,6 +193,7 @@ class Okx(CexExchange):
     INFO_QUERY = dict(instType='SPOT')
     
     KLINE_URI = '/market/index-candles'
+    KLINE_HISTORY_URI = '/market/history-index-candles'
     KLINE_PATH = 'data'
     KLINE_MAPPER = {
         '_ts': 0,
@@ -179,6 +205,7 @@ class Okx(CexExchange):
         'turnover': None
     }
     KLINE_QUERY_SYMBOL_PARAM = 'instId'
+    KLINE_QUERY_START_PARAM = 'before'
     KLINE_QUERY_LIMIT_PARAM  = 'limit'
     KLINE_QUERY_INTERVAL_PARAM = 'bar'
     KLINE_INTERVAL_MAPPER = {
@@ -212,6 +239,7 @@ class KuCoin(CexExchange):
     QUOTE = 'quoteCurrency'
     
     KLINE_URI = '/api/v1/market/candles'
+    KLINE_HISTORY_URI = KLINE_URI
     KLINE_PATH = 'data'
     KLINE_MAPPER = {
         '_ts': 0,
@@ -259,9 +287,11 @@ class Bitget(CexExchange):
     QUOTE = 'quoteCoin'
     
     KLINE_URI = '/spot/market/candles'
+    KLINE_HISTORY_URI = '/spot/market/history-candles'
     KLINE_PATH = 'data'
     KLINE_QUERY = dict(granularity='1min')
     KLINE_QUERY_LIMIT_PARAM = 'limit'
+    KLINE_QUERY_END_PARAM = 'startAt'
     KLINE_QUERY_INTERVAL_PARAM = 'granularity'
     KLINE_INTERVAL_MAPPER = {
         '1m': '1min',
@@ -306,6 +336,7 @@ class Mexc(CexExchange):
     QUOTE = 'quoteAsset'
     
     KLINE_URI = '/klines'
+    KLINE_HISTORY_URI = KLINE_URI
     KLINE_MAPPER = {
         '_ts': 0,
         'open': 1,
@@ -318,6 +349,7 @@ class Mexc(CexExchange):
     
     KLINE_QUERY = dict(interval='1m')
     KLINE_QUERY_LIMIT_PARAM = 'limit'
+    KLINE_QUERY_START_PARAM = 'startTime'
     KLINE_QUERY_INTERVAL_PARAM = 'interval'
     TS_UNIT = 1
     COMSUMER = 40
@@ -340,6 +372,7 @@ class Gateio(CexExchange):
     INFO_URI = '/spot/currency_pairs'
     
     KLINE_URI = '/spot/candlesticks'
+    KLINE_HISTORY_URI = KLINE_URI
     KLINE_MAPPER = {
         '_ts': 0,
         'volume': 1,
@@ -352,6 +385,7 @@ class Gateio(CexExchange):
     
     KLINE_QUERY = dict(interval='1m')
     KLINE_QUERY_LIMIT_PARAM = 'limit'
+    KLINE_QUERY_START_PARAM = 'from'
     KLINE_QUERY_SYMBOL_PARAM = 'currency_pair'
     KLINE_QUERY_INTERVAL_PARAM = 'interval'
 
