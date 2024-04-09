@@ -52,6 +52,7 @@ class CandleSenderReceiver:
                 'type': 'history',
                 'data': [candle.model_dump() for candle in history]
             })
+        except WebSocketDisconnect: raise
         except Exception as e:
             await ws.send_json({'type': 'error', 'message': f'Error while fetching history: {e}'})
 
