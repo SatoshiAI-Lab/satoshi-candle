@@ -118,7 +118,6 @@ class CexExchange:
             query_params[self.KLINE_QUERY_LIMIT_PARAM] = str(limit)
         if start:
             ts_unit = 1000 if self.TS_UNIT else 1
-            start *= ts_unit
             if self.KLINE_QUERY_START_PARAM:
                 query_params[self.KLINE_QUERY_START_PARAM] = str(start)
             elif self.KLINE_QUERY_END_PARAM:
@@ -128,7 +127,7 @@ class CexExchange:
             query_params[self.KLINE_QUERY_INTERVAL_PARAM] = self.KLINE_INTERVAL_MAPPER[interval]
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(self.klinehistoryurl if start else self.klineurl, params=query_params)
+                response = await client.get((self.klinehistoryurl if start else self.klineurl), params=query_params)
                 response.raise_for_status()
                 klines = response.json()
                 for next in self.klinepath: klines = klines[next]
