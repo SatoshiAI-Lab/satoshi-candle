@@ -71,7 +71,7 @@ class CandleSenderReceiver:
         self._listeners.remove(ws)
         return len(self._listeners) > 0
 
-    async def boardcast(self, data: list[datastruct.Candle]) -> None:
+    async def broadcast(self, data: list[datastruct.Candle]) -> None:
         """
         Broadcast the newly collected data to all listeners
         """
@@ -82,9 +82,7 @@ class CandleSenderReceiver:
                     'type': 'update',
                     'data': datas
                 })
-            except WebSocketDisconnect: pass
-            except Exception as e:
-                logger.error(f'Error while sending data to {ws.state.client}: {e}')
+            except Exception: pass
 
 
 class CandleManager:
@@ -156,7 +154,7 @@ class CandleManager:
     async def broadcast(cls) -> None:
         for tag in cls.listeners:
             data = await cls.listeners[tag].pull_newest()
-            await cls.listeners[tag].boardcast(data)
+            await cls.listeners[tag].broadcast(data)
 
     @classmethod
     async def message_handle(cls, ws: WebSocket, message: dict[str, str]) -> None:
