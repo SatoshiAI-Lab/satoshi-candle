@@ -71,11 +71,12 @@ class WebSocketManager:
         }
 
     async def disconnect(self, ws: WebSocket, code: int = 1000, reason: str = 'Connection Closed'):
-        try: await ws.close(code, reason)
+        try:
+            await ws.close(code, reason)
+            ws_block: dict[str, Any] = self._clients.pop(ws)
+            if ws_block['manager'] and hasattr(ws_block['manager'], 'disconnect'):
+                await ws_block['manager'].disconnect(ws)
         except: pass
-        ws_block: dict[str, Any] = self._clients.pop(ws)
-        if ws_block['manager'] and hasattr(ws_block['manager'], 'disconnect'):
-            await ws_block['manager'].disconnect(ws)
 
     async def disconnect_all(self):
         for ws in self._clients.copy():
