@@ -42,7 +42,7 @@ class CandleSenderReceiver:
         """
         return await self._factory.fetch_newest()
 
-    async def pull_history(self, ws: WebSocket, start: int, limit: int) -> None:
+    async def pull_history(self, ws: WebSocket, start: str | None, limit: str | None) -> None:
         """
         Get historical data based on user request
         """
@@ -172,7 +172,7 @@ class CandleManager:
                     return await ws.send_json({'type': 'error', 'message': str(e)})
                 if tag not in cls.listeners:
                     return await ws.send_json({'type': 'error', 'message': f'No listener for {tag}'})
-                await cls.listeners[tag].pull_history(ws, data['start'], data['limit'])
+                await cls.listeners[tag].pull_history(ws, data['start'], data.get('limit'))
 
     @classmethod
     async def disconnect(cls, ws: WebSocket) -> None:
