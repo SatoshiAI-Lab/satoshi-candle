@@ -59,8 +59,9 @@ class CandleSenderReceiver:
         """
         Remove a listener from the manager, and return if there are still listeners
         """
-        if ws in self._listeners:
-            self._listeners.remove(ws)
+        if ws not in self._listeners:
+            raise ValueError(f'Listener not found in {self.tag} tag')
+        self._listeners.remove(ws)
         return len(self._listeners) > 0
 
     async def boardcast(self, data: list[datastruct.Candle]) -> None:
