@@ -47,7 +47,13 @@ class CandleSenderReceiver:
         Get historical data based on user request
         """
         try:
-            history = await self._factory.fetch_history(int(start) if start else None, int(limit))
+            start = int(start) if start else None
+            limit = int(limit) if limit else None
+            if start is not None and start <= 0:
+                raise ValueError('Invalid start: must be positive integer')
+            if limit is not None and limit < 0:
+                raise ValueError('Invalid limit: must be positive integer or zero or none')
+            history = await self._factory.fetch_history(start, limit)
             await ws.send_json({
                 'type': 'history',
                 'data': [candle.model_dump() for candle in history]
