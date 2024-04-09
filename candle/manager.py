@@ -42,12 +42,12 @@ class CandleSenderReceiver:
         """
         return await self._factory.fetch_newest()
 
-    async def pull_history(self, ws: WebSocket, start: str | None, limit: str | None) -> None:
+    async def pull_history(self, ws: WebSocket, start: str | int | None, limit: str | int | None) -> None:
         """
         Get historical data based on user request
         """
         try:
-            history = await self._factory.fetch_history(int(start) if start else None, limit)
+            history = await self._factory.fetch_history(int(start) if start else None, int(limit))
             await ws.send_json({
                 'type': 'history',
                 'data': [candle.model_dump() for candle in history]
