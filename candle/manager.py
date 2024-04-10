@@ -56,11 +56,13 @@ class CandleSenderReceiver:
             history = await self._factory.fetch_history(start, limit)
             await ws.send_json({
                 'type': 'history',
+                'status': 'success',
+                'message': 'fetched',
                 'data': [candle.model_dump() for candle in history]
             })
         except WebSocketDisconnect: raise
         except Exception as e:
-            await ws.send_json({'type': 'error', 'message': f'Error while fetching history: {e}'})
+            await ws.send_json({'type': 'history', 'status': 'error', 'message': f'Error while fetching history: {e}', 'data': []})
 
     def remove_listener(self, ws: WebSocket) -> bool:
         """
@@ -177,7 +179,7 @@ class CandleManager:
                 try:
                     tag = cls.get_tag(data)
                 except (ValueError, LookupError) as e:
-                    return await ws.send_json({'type': 'error', 'message': str(e)})
+                    return await ws.send_json({'type': 'history', 'status': 'error', 'message': str(e), 'data': []})
                 if tag not in cls.listeners:
                     return await ws.send_json({'type': 'error', 'message': f'No listener for {tag}'})
                 await cls.listeners[tag].pull_history(ws, data['start'], data.get('limit'))
