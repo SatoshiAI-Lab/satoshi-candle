@@ -22,6 +22,15 @@ class CandleSenderReceiver:
         """
         latest = await self._factory.fetch_latest()
         self._listeners.add(ws)
+        if hasattr(self._factory, 'info'):
+            return await ws.send_json({
+                'type': 'init',
+                'status': 'success',
+                'message': 'listening to new data',
+                'tag': self.tag,
+                'info': self._factory.info,
+                'data': [candle.model_dump() for candle in latest]
+            })
         await ws.send_json({
             'type': 'init',
             'status': 'success',

@@ -96,6 +96,13 @@ class DexFactory(ds.CandleFactory):
         self.viewer = DexViewer(network, pool, interval)
         super().__init__(self.ID, f'{network}-{pool}', interval)
 
+    @property
+    def info(self) -> dict[str, str]:
+        return {
+            'base': self.viewer.base,
+            'quote': self.viewer.quote,
+        }
+
     async def check(self) -> bool:
         try:
             await self.viewer.fetch(limit=1)
