@@ -87,7 +87,7 @@ class DexViewer:
             raise LookupError(f"Error from {self.NAME}: {e}")
 
 
-class DexFactory(ds.CandleFactory):
+class DexFactory(ds.DexCandleFactory):
     def __init__(self, network: str, pool: str, interval: str | None = None) -> None:
         if network not in NETWORKS:
             raise ValueError('Invalid Network')
