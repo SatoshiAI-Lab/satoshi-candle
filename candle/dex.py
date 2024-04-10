@@ -88,19 +88,18 @@ class DexViewer:
 
 
 class DexFactory(ds.DexCandleFactory):
-    def __init__(self, network: str, token: str, pool: str, interval: str | None = None) -> None:
+    def __init__(self, network: str, address: str, pool: str, interval: str | None = None) -> None:
         if network not in NETWORKS:
             raise ValueError('Invalid Network')
         if interval not in INTERVALS:
             raise ValueError('Invalid Interval')
         self.viewer = DexViewer(network, pool, interval)
-        self.token = token
-        super().__init__(self.ID, f'{network}-{pool}', interval)
+        super().__init__(network, address, pool, interval)
 
     @property
     def info(self) -> dict[str, str]:
         return {
-            'token': self.token,
+            'token': self.address,
             'base': self.viewer.base,
             'quote': self.viewer.quote,
         }
