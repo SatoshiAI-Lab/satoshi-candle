@@ -118,10 +118,10 @@ class CexExchange:
             query_params[self.KLINE_QUERY_LIMIT_PARAM] = str(limit)
         if start:
             ts_unit = 1000 if self.TS_UNIT else 1
+            if self.KLINE_QUERY_END_PARAM:
+                query_params[self.KLINE_QUERY_END_PARAM] = str(start + limit * self.KLINE_INTERVAL_TIME_MAPPER[interval] * ts_unit)
             if self.KLINE_QUERY_START_PARAM:
                 query_params[self.KLINE_QUERY_START_PARAM] = str(start)
-            elif self.KLINE_QUERY_END_PARAM:
-                query_params[self.KLINE_QUERY_END_PARAM] = str(start + limit * self.KLINE_INTERVAL_TIME_MAPPER[interval] * ts_unit)
         
         if interval and self.KLINE_QUERY_INTERVAL_PARAM and self.KLINE_INTERVAL_MAPPER.get(interval):
             query_params[self.KLINE_QUERY_INTERVAL_PARAM] = self.KLINE_INTERVAL_MAPPER[interval]
@@ -170,6 +170,7 @@ class Binance(CexExchange):
     KLINE_QUERY_LIMIT_PARAM = 'limit'
     KLINE_QUERY_INTERVAL_PARAM = 'interval'
     KLINE_QUERY_START_PARAM = 'startTime'
+    KLINE_QUERY_END_PARAM = 'endTime'
     TS_UNIT = 1
     COMSUMER = 200
     RATE_SPEED = 0.5
@@ -356,6 +357,7 @@ class Mexc(CexExchange):
     KLINE_QUERY = dict(interval='1m')
     KLINE_QUERY_LIMIT_PARAM = 'limit'
     KLINE_QUERY_START_PARAM = 'startTime'
+    KLINE_QUERY_END_PARAM = 'endTime'
     KLINE_QUERY_INTERVAL_PARAM = 'interval'
     TS_UNIT = 1
     COMSUMER = 40
