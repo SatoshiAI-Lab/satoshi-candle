@@ -93,7 +93,7 @@ class WebSocketManager:
     async def heartbeat(self):
         while True:
             for ws, ws_block in self._clients.copy().items():
-                if ws_block['ts'] + 300 < time.time():
+                if ws_block['ts'] + 60 < time.time():
                     try:
                         if ws.client_state == WebSocketState.CONNECTED:
                             await self.disconnect(ws, 1006, 'Heartbeat Timeout')
