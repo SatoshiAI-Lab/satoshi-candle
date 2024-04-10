@@ -127,7 +127,12 @@ class CexExchange:
             query_params[self.KLINE_QUERY_INTERVAL_PARAM] = self.KLINE_INTERVAL_MAPPER[interval]
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get((self.klinehistoryurl if start else self.klineurl), params=query_params)
+                for _ in range(3):
+                    try:
+                        response = await client.get((self.klinehistoryurl if start else self.klineurl), params=query_params)
+                        break
+                    except (httpx.ConnectError, httpx.ConnectTimeout):
+                        continue
                 response.raise_for_status()
                 klines = response.json()
                 for next in self.klinepath: klines = klines[next]
