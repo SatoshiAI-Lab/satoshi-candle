@@ -133,6 +133,8 @@ class CexExchange:
                         break
                     except (httpx.ConnectError, httpx.ConnectTimeout):
                         continue
+                else:
+                    raise LookupError(f"Failed to fetch data from {self.NAME}")
                 response.raise_for_status()
                 klines = response.json()
                 for next in self.klinepath: klines = klines[next]
