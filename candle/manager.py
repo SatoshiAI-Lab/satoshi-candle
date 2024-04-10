@@ -154,9 +154,9 @@ class CandleManager:
 
     @classmethod
     async def broadcast(cls) -> None:
-        for tag in cls.listeners:
-            data = await cls.listeners[tag].pull_newest()
-            await cls.listeners[tag].broadcast(data)
+        for tag, candler in cls.listeners.copy().items():
+            data = await candler.pull_newest()
+            await candler.broadcast(data)
 
     @classmethod
     async def message_handle(cls, ws: WebSocket, message: dict[str, str]) -> None:
