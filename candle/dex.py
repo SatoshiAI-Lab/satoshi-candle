@@ -80,7 +80,7 @@ class DexViewer:
                         close=float(result[4]),
                         volume=float(result[5]),
                     )
-                    for result in results
+                    for result in results[::1]
                 ]
         except LookupError: raise
         except Exception as e:
