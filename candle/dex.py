@@ -27,12 +27,14 @@ INTERVALS = {
 
 class DexViewer:
     ID = 'geckoterminal'
+    NAME = 'Gecko Terminal'
     BASE_URL = 'https://api.geckoterminal.com/api/v2/networks/{network}/pools/{pool}/ohlcv/{timeframe}'
     START_PARAM = 'before_timestamp'
     LIMIT_PARAM = 'limit'
 
-    def __init__(self, network: str, pool: str, interval: str | None = None):
+    def __init__(self, network: str, token: str, pool: str, interval: str | None = None):
         self.network = network
+        self.token = token
         self.pool = pool
         if interval not in INTERVALS:
             raise ValueError('Invalid Interval')
@@ -42,6 +44,7 @@ class DexViewer:
         self.query_params = {
             'aggregate': self.aggregate,
         }
+        self.tag = f'dex:{network}:{token}:{pool}:{interval}'
         self.base = None
         self.quote = None
 
@@ -60,17 +63,20 @@ class DexViewer:
                     except (httpx.ConnectError, httpx.ConnectTimeout):
                         continue
                 else:
-                    raise LookupError(f"Failed to fetch data from {self.NAME}")
+                    raise LookupError(f"Failed to fetch data from {self.tag}")
                 response.raise_for_status()
                 results: dict[str, Any] = response.json()
                 if 'error' in results:
-                    raise LookupError(f"Error from {self.NAME}: {results['error']}")
+                    raise LookupError(f"Error from {self.tag}: {results['error']}")
                 meta: dict[str, dict[str, str]] = results.get('meta', {})
                 self.base = meta.get('base')
                 self.quote = meta.get('quote')
                 results: list[list] = results.get('data', {}).get('attributes', {}).get('ohlcv_list', [])
                 if len(results) == 0:
-                    raise LookupError(f"No data available for {self.NAME}")
+                    raise LookupError(f"No data available for {self.tag}")
+                if len(results) > 1:
+                    if results[0][0] > results[-1][0]:
+                        results = results[::-1]
                 return [
                     ds.Candle(
                         timestamp=int(result[0]),
@@ -80,7 +86,7 @@ class DexViewer:
                         close=float(result[4]),
                         volume=float(result[5]),
                     )
-                    for result in results[::1]
+                    for result in results
                 ]
         except LookupError: raise
         except Exception as e:
@@ -93,7 +99,7 @@ class DexFactory(ds.DexCandleFactory):
             raise ValueError('Invalid Network')
         if interval not in INTERVALS:
             raise ValueError('Invalid Interval')
-        self.viewer = DexViewer(network, pool, interval)
+        self.viewer = DexViewer(network, address, pool, interval)
         super().__init__(network, address, pool, interval)
 
     @property
